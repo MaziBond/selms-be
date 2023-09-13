@@ -95,15 +95,11 @@ class LeaveRequestController(BaseController):
             return self.handle_response(f"Invalid request type '{status}' ", status_code=404)
 
         user = self.user_service.get(user_id)
-        manager = self.user_service.get(manager_id)
 
         leave_request = self.leave_request_service.get(leave_request_id)
 
         if not user:
             return self.handle_response('User not found', status_code=404)
-
-        if not user.manager.id == manager_id or not manager.role == "Super admin":
-            return self.handle_response('Only a manager assigned to this user can approve or reject a leave application', status_code=403)
 
         if leave_request:
             updated_leave_request = self.leave_request_service.update(
@@ -114,10 +110,10 @@ class LeaveRequestController(BaseController):
             )
 
             user_name = f'{user.first_name.capitalize()} {user.last_name.capitalize()}'
-            manager_name = f'{manager.first_name.capitalize()} {manager.last_name.capitalize()}'
+            manager_name = f'{user.manager.first_name.capitalize()} {user.manager.last_name.capitalize()}'
             email_subject = f'Leave Request {status}'
             send_email(
-                to=manager.email_address,
+                to=user.email_address,
                 subject=email_subject,
                 template='request_response_template',
                 user=user_name,
